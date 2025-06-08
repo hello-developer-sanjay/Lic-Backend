@@ -132,7 +132,9 @@ app.get('/api/lic/ratings', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
+app.get('/', (req, res) => {
+  res.send('Welcome to LIC API');
+});
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
