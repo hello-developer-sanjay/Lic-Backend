@@ -13,7 +13,21 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// Middleware to block malformed requests (e.g., paths containing http:// or https://)
+app.use((req, res, next) => {
+  if (req.path.includes('http://') || req.path.includes('https://')) {
+    console.log(`Blocking malformed request path: ${req.path}`);
+    return res.status(400).json({ error: 'Invalid request path' });
+  }
+  next();
+});
+
+// Health check route for Render
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
+// Existing Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
