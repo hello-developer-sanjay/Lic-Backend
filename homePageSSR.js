@@ -8,7 +8,6 @@ const crypto = require('crypto');
 
 const router = express.Router();
 const cache = new Map();
-
 // Utility to escape HTML
 const escapeHTML = str => {
   if (!str || typeof str !== 'string') return '';
