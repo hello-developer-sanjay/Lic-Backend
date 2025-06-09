@@ -34,6 +34,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`Request received: ${req.method} ${req.url} at ${new Date().toISOString()}`);
+  next();
+});
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI_LIC, {
   useNewUrlParser: true,
@@ -155,7 +161,7 @@ app.get('/api/lic/ratings', async (req, res) => {
 });
 
 // Start Server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4500;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
