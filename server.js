@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const path = require('path');
 const LICFeedback = require('./models/LICFeedback');
 const LICQuery = require('./models/LICQuery');
 const LICReview = require('./models/LICReview');
@@ -18,14 +19,9 @@ console.log('PORT:', process.env.PORT);
 console.log('MONGODB_URI_LIC:', process.env.MONGODB_URI_LIC ? '[REDACTED]' : 'Not set');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 
-// Health check route
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK' });
-});
-
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://lic-neemuch-jitendra-patidar.vercel.app'],
+  origin: ['http://localhost:5173', 'https://lic-neemuch-jitendra-patidar.vercel.app', 'https://lic-backend-8jun.onrender.com'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept'],
   credentials: true,
@@ -34,11 +30,14 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Log all incoming requests
+// Log all requests
 app.use((req, res, next) => {
   console.log(`Request received: ${req.method} ${req.url} at ${new Date().toISOString()}`);
   next();
 });
+
+// Serve static assets from frontend dist
+app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI_LIC, {
@@ -50,100 +49,61 @@ mongoose.connect(process.env.MONGODB_URI_LIC, {
   console.error('MongoDB connection error:', error);
 });
 
-// Explicit root route to ensure SSR
+// Health check
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK' });
+});
+
+// Explicit root route for SSR
 app.get('/', (req, res, next) => {
   console.log('Explicit / route hit at', new Date().toISOString());
   homePageSSR(req, res, next);
 });
 
-// Use SSR router for other routes
-app.use(homePageSSR);
-
-// Feedback Endpoints
+// API routes
 app.post('/api/lic/submit-feedback', async (req, res) => {
   try {
-    const { name, email, feedback } = req.body;
-    if (!name || !feedback) {
-      return res.status(400).json({ error: 'Name and feedback are required' });
-    }
-    const newFeedback = new LICFeedback({ name, email, feedback });
+    const { name, feedback } = req.body;
+    if (!name || !feedback) return res.status(400).json({ error: 'Name and feedback required' });
+    const newFeedback = new LICFeedback({ name, feedback });
     await newFeedback.save();
-    res.status(201).json({ message: 'Feedback submitted successfully' });
+    res.status(201).json({ message: 'Feedback submitted' });
   } catch (error) {
-    console.error('Error submitting feedback:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Feedback error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.get('/api/lic/feedbacks', async (req, res) => {
-  try {
-    const feedbacks = await LICFeedback.find();
-    res.json(feedbacks);
-  } catch (error) {
-    console.error('Error fetching feedbacks:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Query Endpoints
 app.post('/api/lic/submit-query', async (req, res) => {
   try {
-    const { name, email, query } = req.body;
-    if (!name || !query) {
-      return res.status(400).json({ error: 'Name and query are required' });
-    }
-    const newQuery = new LICQuery({ name, email, query });
+    const { name, query } = req.body;
+    if (!name || !query) return res.status(400).json({ error: 'Name and query required' });
+    const newQuery = new LICQuery({ name, query });
     await newQuery.save();
-    res.status(201).json({ message: 'Query submitted successfully' });
+    res.status(201).json({ message: 'Query submitted' });
   } catch (error) {
-    console.error('Error submitting query:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Query error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.get('/api/lic/queries', async (req, res) => {
-  try {
-    const queries = await LICQuery.find();
-    res.json(queries);
-  } catch (error) {
-    console.error('Error fetching queries:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Review Endpoints
 app.post('/api/lic/reviews', async (req, res) => {
   try {
     const { username, comment } = req.body;
-    if (!username || !comment) {
-      return res.status(400).json({ error: 'Username and comment are required' });
-    }
+    if (!username || !comment) return res.status(400).json({ error: 'Username and comment required' });
     const newReview = new LICReview({ username, comment });
     await newReview.save();
     res.status(201).json(newReview);
   } catch (error) {
-    console.error('Error posting review:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Review error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.get('/api/lic/reviews', async (req, res) => {
-  try {
-    const reviews = await LICReview.find();
-    res.json(reviews);
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Rating Endpoints
 app.post('/api/lic/ratings', async (req, res) => {
   try {
     const { userId, rating } = req.body;
-    if (!userId || !rating) {
-      return res.status(400).json({ error: 'User ID and rating are required' });
-    }
+    if (!userId || !rating) return res.status(400).json({ error: 'User ID and rating required' });
     const existingRating = await LICRating.findOneAndUpdate(
       { userId },
       { rating },
@@ -151,22 +111,16 @@ app.post('/api/lic/ratings', async (req, res) => {
     );
     res.json(existingRating);
   } catch (error) {
-    console.error('Error updating rating:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Rating error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-app.get('/api/lic/ratings', async (req, res) => {
-  try {
-    const ratings = await LICRating.find();
-    res.json(ratings);
-  } catch (error) {
-    console.error('Error fetching ratings:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+// Fallback to client-side routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start Server
 const PORT = process.env.PORT || 4500;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
