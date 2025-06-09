@@ -10,7 +10,6 @@ const LICRating = require('./models/LICRating');
 const homePageSSR = require('./homePageSSR');
 
 dotenv.config();
-
 const app = express();
 
 // Middleware to block malformed requests (e.g., paths containing http:// or https://)
