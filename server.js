@@ -46,7 +46,7 @@ mongoose.connect(process.env.MONGODB_URI_LIC, {
 
 // Use the SSR route for the homepage (restored)
 console.log('Registering route: / (homePageSSR)');
-app.use('/', homePageSSR);
+app.use(homePageSSR);
 
 // Feedback Endpoints
 console.log('Registering route: POST /api/lic/submit-feedback');
