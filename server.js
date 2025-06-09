@@ -19,6 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (including the client-side React bundle)
+console.log('Registering static route: /dist');
 app.use('/dist', express.static(path.join(__dirname, '../dist')));
 
 // MongoDB Connection
@@ -32,9 +33,11 @@ mongoose.connect(process.env.MONGODB_URI_LIC, {
 });
 
 // Use the SSR route for the homepage
+console.log('Registering route: / (homePageSSR)');
 app.use('/', homePageSSR);
 
 // Feedback Endpoints
+console.log('Registering route: POST /api/lic/submit-feedback');
 app.post('/api/lic/submit-feedback', async (req, res) => {
   try {
     const { name, email, feedback } = req.body;
@@ -50,6 +53,7 @@ app.post('/api/lic/submit-feedback', async (req, res) => {
   }
 });
 
+console.log('Registering route: GET /api/lic/feedbacks');
 app.get('/api/lic/feedbacks', async (req, res) => {
   try {
     const feedbacks = await LICFeedback.find();
@@ -61,6 +65,7 @@ app.get('/api/lic/feedbacks', async (req, res) => {
 });
 
 // Query Endpoints
+console.log('Registering route: POST /api/lic/submit-query');
 app.post('/api/lic/submit-query', async (req, res) => {
   try {
     const { name, email, query } = req.body;
@@ -76,6 +81,7 @@ app.post('/api/lic/submit-query', async (req, res) => {
   }
 });
 
+console.log('Registering route: GET /api/lic/queries');
 app.get('/api/lic/queries', async (req, res) => {
   try {
     const queries = await LICQuery.find();
@@ -87,6 +93,7 @@ app.get('/api/lic/queries', async (req, res) => {
 });
 
 // Review Endpoints
+console.log('Registering route: POST /api/lic/reviews');
 app.post('/api/lic/reviews', async (req, res) => {
   try {
     const { username, comment } = req.body;
@@ -102,6 +109,7 @@ app.post('/api/lic/reviews', async (req, res) => {
   }
 });
 
+console.log('Registering route: GET /api/lic/reviews');
 app.get('/api/lic/reviews', async (req, res) => {
   try {
     const reviews = await LICReview.find();
@@ -113,6 +121,7 @@ app.get('/api/lic/reviews', async (req, res) => {
 });
 
 // Rating Endpoints
+console.log('Registering route: POST /api/lic/ratings');
 app.post('/api/lic/ratings', async (req, res) => {
   try {
     const { userId, rating } = req.body;
@@ -131,6 +140,7 @@ app.post('/api/lic/ratings', async (req, res) => {
   }
 });
 
+console.log('Registering route: GET /api/lic/ratings');
 app.get('/api/lic/ratings', async (req, res) => {
   try {
     const ratings = await LICRating.find();
@@ -141,9 +151,20 @@ app.get('/api/lic/ratings', async (req, res) => {
   }
 });
 
-// Fallback for client-side routing (for routes like /reviews, /join, etc.)
+// Fallback for client-side routing (e.g., /reviews, /join)
+console.log('Registering route: GET * (fallback)');
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+
+// Error handling middleware for invalid routes
+app.use((err, req, res, next) => {
+  if (err instanceof TypeError && err.message.includes('Missing parameter name')) {
+    console.error(`Invalid route path detected: ${req.path}`);
+    res.status(500).json({ error: 'Invalid route configuration' });
+  } else {
+    next(err);
+  }
 });
 
 // Start Server
