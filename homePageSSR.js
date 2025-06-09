@@ -298,13 +298,8 @@ router.get('/', async (req, res) => {
         </style>
       </head>
       <body>
-        <div id="root" data-html="${escapeHTML(htmlContent)}">
-          ${htmlContent}
-        </div>
-        <script>
-          window.__INITIAL_DATA__ = ${JSON.stringify(initialData)};
-        </script>
-        <script src="/dist/main.js" defer></script>
+        <div id="root">${htmlContent}</div>
+        <script>window.__INITIAL_DATA__ = ${JSON.stringify(initialData)};</script>
       </body>
       </html>
     `;
@@ -329,7 +324,6 @@ router.get('/', async (req, res) => {
           <div>An error occurred. Please try again later.</div>
           <a href="/">Home</a>
         </div>
-        <script src="/dist/main.js" defer></script>
       </body>
       </html>
     `);
