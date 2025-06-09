@@ -6,7 +6,15 @@ const LICRating = require('./models/LICRating');
 const router = express.Router();
 
 // Utility to escape HTML
-const escapeHTML = str => { if (!str || typeof str !== 'string') return ''; return str .replace(/&/g, '&amp;') .replace(/</g, '&lt;') .replace(/>/g, '&gt;') .replace(/"/g, '&quot;') .replace(/'/g, '&#39;'); };
+const escapeHTML = str => {
+  if (!str || typeof str !== 'string') return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
 
 // Fetch ratings and reviews from MongoDB
 const fetchRatingsAndReviews = async () => {
@@ -43,6 +51,7 @@ const renderStars = (rating) => {
 };
 
 router.get('/', async (req, res) => {
+  console.log('SSR Request received for / at', new Date().toISOString());
   try {
     const { averageRating, ratingCount, reviews } = await fetchRatingsAndReviews();
     const pageUrl = 'https://lic-neemuch-jitendra-patidar.vercel.app/';
@@ -167,6 +176,7 @@ router.get('/', async (req, res) => {
 
     res.setHeader('Content-Type', 'text/html');
     res.status(200).send(html);
+    console.log('SSR Response sent for / at', new Date().toISOString());
   } catch (error) {
     console.error('SSR Error:', error.stack);
     const errorHtml = `
