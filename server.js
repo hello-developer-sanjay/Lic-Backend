@@ -50,7 +50,13 @@ mongoose.connect(process.env.MONGODB_URI_LIC, {
   console.error('MongoDB connection error:', error);
 });
 
-// Use the SSR route for the homepage
+// Explicit root route to ensure SSR
+app.get('/', (req, res, next) => {
+  console.log('Explicit / route hit at', new Date().toISOString());
+  homePageSSR(req, res, next);
+});
+
+// Use SSR router for other routes
 app.use(homePageSSR);
 
 // Feedback Endpoints
