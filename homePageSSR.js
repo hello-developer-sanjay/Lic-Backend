@@ -139,7 +139,7 @@ router.get('/', async (req, res) => {
           </section>
         </main>
         <footer>
-          <p>© EduXcel by Sanjay Patidar | June 9, 2025</p>
+          <p>© EduXcel by Sanjay Patidar | June 10, 2025</p>
         </footer>
       </div>
     `;
@@ -174,7 +174,11 @@ router.get('/', async (req, res) => {
       </html>
     `;
 
-    res.setHeader('Content-Type', 'text/html');
+    console.log('SSR HTML length:', html.length);
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.status(200).send(html);
     console.log('SSR Response sent for / at', new Date().toISOString());
   } catch (error) {
@@ -198,6 +202,7 @@ router.get('/', async (req, res) => {
       </body>
       </html>
     `;
+    res.setHeader('Content-Type', 'text/html; charset=UTF-8');
     res.status(500).send(errorHtml);
   }
 });
