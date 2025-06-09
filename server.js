@@ -10,23 +10,22 @@ const LICRating = require('./models/LICRating');
 const homePageSSR = require('./homePageSSR');
 
 dotenv.config();
+
 const app = express();
 
-// Middleware to block malformed requests (e.g., paths containing http:// or https://)
-app.use((req, res, next) => {
-  if (req.path.includes('http://') || req.path.includes('https://')) {
-    console.log(`Blocking malformed request path: ${req.path}`);
-    return res.status(400).json({ error: 'Invalid request path' });
-  }
-  next();
-});
+// Log environment variables to debug potential issues during startup
+console.log('Environment variables during startup:');
+console.log('PORT:', process.env.PORT);
+console.log('MONGODB_URI_LIC:', process.env.MONGODB_URI_LIC ? '[REDACTED]' : 'Not set');
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
-// Health check route for Render
+// Health check route as the very first route to ensure Render can use it
+console.log('Registering route: GET /health');
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
 
-// Existing Middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
