@@ -48,7 +48,7 @@ const renderStars = (rating) => {
   return stars;
 };
 
-router.get('/', async (req, res) => {
+router.get('https://lic-backend-8jun.onrender.com/', async (req, res) => {
   const cacheKey = 'ssr:home';
   if (cache.has(cacheKey)) {
     const cachedHtml = cache.get(cacheKey);
