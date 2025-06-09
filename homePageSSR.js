@@ -6,8 +6,8 @@ const crypto = require('crypto');
 
 const router = express.Router();
 const cache = new Map();
- const escapeHTML = str => { if (!str || typeof str !== 'string') return ''; return str .replace(/&/g, '&amp;') .replace(/</g, '&lt;') .replace(/>/g, '&gt;') .replace(/"/g, '&quot;') .replace(/'/g, '&#39;'); };
 
+const escapeHTML = str => { if (!str || typeof str !== 'string') return ''; return str .replace(/&/g, '&amp;') .replace(/</g, '&lt;') .replace(/>/g, '&gt;') .replace(/"/g, '&quot;') .replace(/'/g, '&#39;'); };
 // Fetch ratings and reviews from MongoDB
 const fetchRatingsAndReviews = async () => {
   try {
@@ -55,7 +55,39 @@ router.get('/', async (req, res) => {
     const { averageRating, ratingCount, reviews } = await fetchRatingsAndReviews();
     const pageUrl = 'https://lic-neemuch-jitendra-patidar.vercel.app/';
     const metaDescription = `Jitendra Patidar, LIC Development Officer in Neemuch, offers trusted life insurance, financial planning, and LIC agent opportunities in Madhya Pradesh. Rated ${averageRating}/5 by ${ratingCount} clients.`;
-    const titleImage = 'https://mys3resources.s3.ap-south-1.amazonaws.com/LIC/titleImage_LICBlo.jpeg';
+    const keywords = 'LIC Neemuch, Jitendra Patidar, secure life, life insurance Neemuch, LIC agent recruitment, financial planning Madhya Pradesh, trusted insurance solutions';
+
+    const structuredData = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'LocalBusiness',
+        name: 'LIC Neemuch',
+        description: metaDescription,
+        url: pageUrl,
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'Vikas Nagar, Scheme No. 14-3, Neemuch Chawni',
+          addressLocality: 'Neemuch',
+          addressRegion: 'Madhya Pradesh',
+          postalCode: '458441',
+          addressCountry: 'IN',
+        },
+        telephone: '+917987235207',
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: averageRating,
+          reviewCount: ratingCount,
+          bestRating: '5',
+          worstRating: '1',
+        },
+        review: reviews.map(review => ({
+          '@type': 'Review',
+          author: { '@type': 'Person', name: review.username },
+          datePublished: new Date(review.createdAt).toISOString().split('T')[0],
+          reviewBody: review.comment,
+        })),
+      },
+    ];
 
     const htmlContent = `
       <nav class="navbar">
@@ -73,6 +105,9 @@ router.get('/', async (req, res) => {
             <p class="content-text" lang="en">
               At LIC Neemuch, led by Development Officer <strong>Jitendra Patidar</strong>, we ensure your secure life through comprehensive life insurance and financial planning solutions.
             </p>
+            <p class="content-text" lang="hi">
+              नीमच में एलआईसी, विकास अधिकारी <strong>जीतेंद्र पाटीदार</strong> के नेतृत्व में, आपके सुरक्षित जीवन को सुनिश्चित करता है।
+            </p>
             ${ratingCount > 0 && averageRating >= 1 ? `
               <div class="rating-display">
                 <span>${renderStars(averageRating)}</span>
@@ -82,11 +117,11 @@ router.get('/', async (req, res) => {
           </section>
           <section>
             <h2 class="section-heading">Contact Jitendra Patidar</h2>
-            <figure>
-              <img src="https://mys3resources.s3.ap-south-1.amazonaws.com/LIC/jitendraprofilephoto.jpg" alt="Jitendra Patidar" width="300" height="300" class="profile-image">
-            </figure>
             <p class="content-text">
               📞 <strong>Contact Number:</strong> <a href="tel:+917987235207" class="content-link">+91 7987235207</a>
+            </p>
+            <p class="content-text">
+              📸 <strong>Instagram:</strong> <a href="https://www.instagram.com/jay7268patidar" class="content-link" target="_blank" rel="noopener noreferrer">jay7268patidar</a>
             </p>
             <address class="content-text">
               <strong>Office Address:</strong> Vikas Nagar, Scheme No. 14-3, Neemuch Chawni, Neemuch, Madhya Pradesh 458441
@@ -120,9 +155,12 @@ router.get('/', async (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="${escapeHTML(metaDescription)}">
+        <meta name="keywords" content="${escapeHTML(keywords)}">
         <title>LIC Neemuch: How Jitendra Patidar Ensures Your Secure Life</title>
+        <link rel="canonical" href="${pageUrl}">
+        <script type="application/ld+json">${JSON.stringify(structuredData)}</script>
         <style>
-          body { font-family: 'Inter', sans-serif; color: #e0e0e0; background: linear-gradient(180deg, #050816, #010204); margin: 0; }
+          body { font-family: sans-serif; color: #e0e0e0; background: linear-gradient(180deg, #050816, #010204); margin: 0; }
           .navbar { position: sticky; top: 0; background: rgba(0, 0, 0, 0.8); padding: 1rem; display: flex; justify-content: center; gap: 1.5rem; }
           .nav-link { color: #ffbb00; text-decoration: none; }
           .container { max-width: 1200px; margin: 0 auto; padding: 1rem; }
@@ -130,7 +168,6 @@ router.get('/', async (req, res) => {
           .section-heading { font-size: 1.8rem; color: #ffbb00; margin: 1rem 0; }
           .content-text { font-size: 1.125rem; margin-bottom: 1rem; }
           .content-link { color: #ffbb00; }
-          .profile-image { width: 300px; height: 300px; border-radius: 50%; }
           .rating-display { display: flex; gap: 0.5rem; margin: 1rem 0; color: #ffbb00; }
           .review-item { margin-bottom: 1rem; }
           .footer { text-align: center; padding: 1rem; }
