@@ -12,14 +12,14 @@ const cache = new Map();
 // Utility to escape HTML
 const escapeHTML = str => {
   if (!str || typeof str !== 'string') return '';
-  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return str.replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, ''');
 };
 
 // Fetch ratings and reviews from MongoDB
 const fetchRatingsAndReviews = async () => {
   try {
     const ratings = await LICRating.find();
-    const reviews = await LICReview.find().sort({ createdAt: -1 }).limit(3); // Get 3 recent reviews
+    const reviews = await LICReview.find().sort({ createdAt: -1 }).limit(3);
     const validRatings = ratings.filter(r => r.rating >= 1 && r.rating <= 5);
     const averageRating = validRatings.length
       ? validRatings.reduce((sum, r) => sum + r.rating, 0) / validRatings.length
@@ -137,12 +137,95 @@ router.get('/', async (req, res) => {
       },
     ];
 
-    // Prepare data to pass to the client-side app
     const initialData = {
       averageRating,
       ratingCount,
       reviews,
     };
+
+    const htmlContent = `
+      <nav class="navbar" aria-label="Main navigation">
+        <a href="/" class="nav-link" aria-label="Home">Home</a>
+        <a href="/reviews" class="nav-link" aria-label="Reviews and Feedback">Reviews & Feedback</a>
+        <a href="/join" class="nav-link" aria-label="Join as Agent">Join as Agent</a>
+        <a href="/services" class="nav-link" aria-label="Services">Services</a>
+        <a href="/about" class="nav-link" aria-label="About">About</a>
+      </nav>
+      <div class="container">
+        <main role="main">
+          <h1 class="hero-title">LIC Neemuch: Jitendra Patidar Ensures Your Secure Life</h1>
+          <article>
+            <section aria-labelledby="welcome-heading">
+              <h2 id="welcome-heading" class="section-heading">Welcome to LIC Neemuch</h2>
+              <p class="content-text" lang="en">
+                At LIC Neemuch, led by Development Officer <strong>Jitendra Patidar</strong>, we ensure your secure life through comprehensive life insurance and financial planning solutions. Serving Neemuch, Mandsaur, Ratangarh, Singoli, Manasa, Jawad, and Sarwaniya Maharaj, our mission is to empower families with trusted LIC policies for a secure future. Whether you seek term insurance, endowment plans, ULIPs, pension plans, or child plans, we offer personalized services to safeguard your life.
+              </p>
+              <p class="content-text" lang="hi">
+                नीमच में एलआईसी, विकास अधिकारी <strong>जीतेंद्र पाटीदार</strong> के नेतृत्व में, आपके सुरक्षित जीवन को सुनिश्चित करता है। नीमच, मंदसौर, रतनगढ़, सिंगोली, मनासा, जावद और सरवानीयाँ महाराज की सेवा करते हुए, हमारा मिशन विश्वसनीय एलआईसी पॉलिसियों के माध्यम से परिवारों को सुरक्षित भविष्य प्रदान करना है। टर्म इंश्योरेंस, एंडोमेंट प्लान, ULIP, पेंशन प्लान, या चाइल्ड प्लान, हम आपके जीवन की सुरक्षा के लिए वैयक्तिकृत सेवाएँ प्रदान करते हैं।
+              </p>
+              ${ratingCount > 0 && averageRating >= 1 ? `
+                <div class="rating-display" aria-label="Average customer rating">
+                  <span>${renderStars(averageRating)}</span>
+                  <span>${averageRating}/5 (${ratingCount} reviews)</span>
+                </div>
+              ` : ''}
+            </section>
+            <section aria-labelledby="contact-heading">
+              <h2 id="contact-heading" class="section-heading">Contact Jitendra Patidar for a Secure Life</h2>
+              <figure class="profile-figure">
+                <img src="https://mys3resources.s3.ap-south-1.amazonaws.com/LIC/jitendraprofilephoto.jpg" alt="Jitendra Patidar, LIC Development Officer ensuring secure life" width="300" height="300" class="profile-image" loading="eager" decoding="async" fetchpriority="high">
+                <figcaption class="sr-only">Profile photo of Jitendra Patidar</figcaption>
+              </figure>
+              <p class="content-text">
+                📞 <strong>Contact Number:</strong> <a href="tel:+917987235207" class="content-link">+91 7987235207</a>
+              </p>
+              <p class="content-text">
+                📸 <strong>Instagram:</strong> <a href="https://www.instagram.com/jay7268patidar" class="content-link" target="_blank" rel="noopener noreferrer">jay7268patidar</a>
+              </p>
+              <address class="content-text">
+                <strong>Office Address:</strong> Vikas Nagar, Scheme No. 14-3, Neemuch Chawni, Neemuch, Madhya Pradesh 458441
+              </address>
+              <p class="content-text">
+                Ready to ensure your secure life? Visit the <a href="https://licindia.in/hi/home" class="content-link" target="_blank" rel="noopener noreferrer">LIC India website</a> or our <a href="/services" class="content-link">services page</a> for more details.
+              </p>
+            </section>
+            <section aria-labelledby="agent-heading">
+              <h2 id="agent-heading" class="section-heading">Become an LIC Agent with Jitendra Patidar</h2>
+              <p class="content-text" lang="en">
+                Join Jitendra Patidar’s team at LIC Neemuch as an LIC agent to ensure a secure career. Enjoy flexible hours, comprehensive training, and attractive commissions. Start by passing the IRDAI exam and completing LIC’s training program. <a href="/join" class="content-link">Learn more about secure agent opportunities</a>.
+              </p>
+              <p class="content-text" lang="hi">
+                नीमच में जीतेंद्र पाटीदार की टीम में एलआईसी एजेंट के रूप में शामिल होकर सुरक्षित करियर सुनिश्चित करें। लचीले घंटों, व्यापक प्रशिक्षण और आकर्षक कमीशन का आनंद लें। IRDAI परीक्षा पास करें और LIC का प्रशिक्षण पूरा करें। <a href="/join" class="content-link">सुरक्षित एजेंट अवसरों के बारे में और जानें</a>।
+              </p>
+            </section>
+            <img src="https://mys3resources.s3.ap-south-1.amazonaws.com/LIC/lic_neemuch_header_11zon.webp" alt="LIC Neemuch Office ensuring secure life insurance" class="office-image" width="600" height="200" loading="lazy" decoding="async">
+            <section aria-labelledby="reviews-heading">
+              <h2 id="reviews-heading" class="section-heading">Recent Reviews</h2>
+              ${reviews.length > 0 ? `
+                <ul class="review-list">
+                  ${reviews.map(review => `
+                    <li class="review-item">
+                      <strong>${escapeHTML(review.username)}:</strong> ${escapeHTML(review.comment)}
+                    </li>
+                  `).join('')}
+                </ul>
+                <p class="content-text">
+                  Want to leave a review or rating? Visit our <a href="/reviews" class="content-link">Reviews & Feedback page</a>.
+                </p>
+              ` : '<p class="content-text">No reviews yet. Be the first to leave a review on our <a href="/reviews" class="content-link">Reviews & Feedback page</a>.</p>'}
+            </section>
+          </article>
+        </main>
+        <footer class="footer">
+          <p class="content-text">
+            Discover <a href="https://zedemy.vercel.app" class="content-link" target="_blank" rel="noopener noreferrer">Zedemy</a> by Sanjay Patidar
+          </p>
+          <p class="content-text">
+            © <strong>EduXcel</strong> by Sanjay Patidar | June 9, 2025
+          </p>
+        </footer>
+      </div>
+    `;
 
     const html = `
       <!DOCTYPE html>
@@ -215,88 +298,8 @@ router.get('/', async (req, res) => {
         </style>
       </head>
       <body>
-        <div id="root" data-initial='${JSON.stringify(initialData)}'>
-          <nav class="navbar" aria-label="Main navigation">
-            <a href="/" class="nav-link" aria-label="Home">Home</a>
-            <a href="/reviews" class="nav-link" aria-label="Reviews and Feedback">Reviews & Feedback</a>
-            <a href="/join" class="nav-link" aria-label="Join as Agent">Join as Agent</a>
-            <a href="/services" class="nav-link" aria-label="Services">Services</a>
-            <a href="/about" class="nav-link" aria-label="About">About</a>
-          </nav>
-          <div class="container">
-            <main role="main">
-              <h1 class="hero-title">LIC Neemuch: Jitendra Patidar Ensures Your Secure Life</h1>
-              <article>
-                <section aria-labelledby="welcome-heading">
-                  <h2 id="welcome-heading" class="section-heading">Welcome to LIC Neemuch</h2>
-                  <p class="content-text" lang="en">
-                    At LIC Neemuch, led by Development Officer <strong>Jitendra Patidar</strong>, we ensure your secure life through comprehensive life insurance and financial planning solutions. Serving Neemuch, Mandsaur, Ratangarh, Singoli, Manasa, Jawad, and Sarwaniya Maharaj, our mission is to empower families with trusted LIC policies for a secure future. Whether you seek term insurance, endowment plans, ULIPs, pension plans, or child plans, we offer personalized services to safeguard your life.
-                  </p>
-                  <p class="content-text" lang="hi">
-                    नीमच में एलआईसी, विकास अधिकारी <strong>जीतेंद्र पाटीदार</strong> के नेतृत्व में, आपके सुरक्षित जीवन को सुनिश्चित करता है। नीमच, मंदसौर, रतनगढ़, सिंगोली, मनासा, जावद और सरवानीयाँ महाराज की सेवा करते हुए, हमारा मिशन विश्वसनीय एलआईसी पॉलिसियों के माध्यम से परिवारों को सुरक्षित भविष्य प्रदान करना है। टर्म इंश्योरेंस, एंडोमेंट प्लान, ULIP, पेंशन प्लान, या चाइल्ड प्लान, हम आपके जीवन की सुरक्षा के लिए वैयक्तिकृत सेवाएँ प्रदान करते हैं।
-                  </p>
-                  ${ratingCount > 0 && averageRating >= 1 ? `
-                    <div class="rating-display" aria-label="Average customer rating">
-                      <span>${renderStars(averageRating)}</span>
-                      <span>${averageRating}/5 (${ratingCount} reviews)</span>
-                    </div>
-                  ` : ''}
-                </section>
-                <section aria-labelledby="contact-heading">
-                  <h2 id="contact-heading" class="section-heading">Contact Jitendra Patidar for a Secure Life</h2>
-                  <figure class="profile-figure">
-                    <img src="https://mys3resources.s3.ap-south-1.amazonaws.com/LIC/jitendraprofilephoto.jpg" alt="Jitendra Patidar, LIC Development Officer ensuring secure life" width="300" height="300" class="profile-image" loading="eager" decoding="async" fetchpriority="high">
-                    <figcaption class="sr-only">Profile photo of Jitendra Patidar</figcaption>
-                  </figure>
-                  <p class="content-text">
-                    📞 <strong>Contact Number:</strong> <a href="tel:+917987235207" class="content-link">+91 7987235207</a>
-                  </p>
-                  <p class="content-text">
-                    📸 <strong>Instagram:</strong> <a href="https://www.instagram.com/jay7268patidar" class="content-link" target="_blank" rel="noopener noreferrer">jay7268patidar</a>
-                  </p>
-                  <address class="content-text">
-                    <strong>Office Address:</strong> Vikas Nagar, Scheme No. 14-3, Neemuch Chawni, Neemuch, Madhya Pradesh 458441
-                  </address>
-                  <p class="content-text">
-                    Ready to ensure your secure life? Visit the <a href="https://licindia.in/hi/home" class="content-link" target="_blank" rel="noopener noreferrer">LIC India website</a> or our <a href="/services" class="content-link">services page</a> for more details.
-                  </p>
-                </section>
-                <section aria-labelledby="agent-heading">
-                  <h2 id="agent-heading" class="section-heading">Become an LIC Agent with Jitendra Patidar</h2>
-                  <p class="content-text" lang="en">
-                    Join Jitendra Patidar’s team at LIC Neemuch as an LIC agent to ensure a secure career. Enjoy flexible hours, comprehensive training, and attractive commissions. Start by passing the IRDAI exam and completing LIC’s training program. <a href="/join" class="content-link">Learn more about secure agent opportunities</a>.
-                  </p>
-                  <p class="content-text" lang="hi">
-                    नीमच में जीतेंद्र पाटीदार की टीम में एलआईसी एजेंट के रूप में शामिल होकर सुरक्षित करियर सुनिश्चित करें। लचीले घंटों, व्यापक प्रशिक्षण और आकर्षक कमीशन का आनंद लें। IRDAI परीक्षा पास करें और LIC का प्रशिक्षण पूरा करें। <a href="/join" class="content-link">सुरक्षित एजेंट अवसरों के बारे में और जानें</a>।
-                  </p>
-                </section>
-                <img src="https://mys3resources.s3.ap-south-1.amazonaws.com/LIC/lic_neemuch_header_11zon.webp" alt="LIC Neemuch Office ensuring secure life insurance" class="office-image" width="600" height="200" loading="lazy" decoding="async">
-                <section aria-labelledby="reviews-heading">
-                  <h2 id="reviews-heading" class="section-heading">Recent Reviews</h2>
-                  ${reviews.length > 0 ? `
-                    <ul class="review-list">
-                      ${reviews.map(review => `
-                        <li class="review-item">
-                          <strong>${escapeHTML(review.username)}:</strong> ${escapeHTML(review.comment)}
-                        </li>
-                      `).join('')}
-                    </ul>
-                    <p class="content-text">
-                      Want to leave a review or rating? Visit our <a href="/reviews" class="content-link">Reviews & Feedback page</a>.
-                    </p>
-                  ` : '<p class="content-text">No reviews yet. Be the first to leave a review on our <a href="/reviews" class="content-link">Reviews & Feedback page</a>.</p>'}
-                </section>
-              </article>
-            </main>
-            <footer class="footer">
-              <p class="content-text">
-                Discover <a href="https://zedemy.vercel.app" class="content-link" target="_blank" rel="noopener noreferrer">Zedemy</a> by Sanjay Patidar
-              </p>
-              <p class="content-text">
-                © <strong>EduXcel</strong> by Sanjay Patidar | June 9, 2025
-              </p>
-            </footer>
-          </div>
+        <div id="root" data-html="${escapeHTML(htmlContent)}">
+          ${htmlContent}
         </div>
         <script>
           window.__INITIAL_DATA__ = ${JSON.stringify(initialData)};
