@@ -5,7 +5,8 @@ const LICRating = require('./models/LICRating');
 
 const router = express.Router();
 
- const escapeHTML = str => { if (!str || typeof str !== 'string') return ''; return str .replace(/&/g, '&amp;') .replace(/</g, '&lt;') .replace(/>/g, '&gt;') .replace(/"/g, '&quot;') .replace(/'/g, '&#39;'); };
+// Utility to escape HTML
+const escapeHTML = str => { if (!str || typeof str !== 'string') return ''; return str .replace(/&/g, '&amp;') .replace(/</g, '&lt;') .replace(/>/g, '&gt;') .replace(/"/g, '&quot;') .replace(/'/g, '&#39;'); };
 
 // Fetch ratings and reviews from MongoDB
 const fetchRatingsAndReviews = async () => {
