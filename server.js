@@ -163,10 +163,20 @@ app.get('/api/lic/ratings', async (req, res) => {
   }
 });
 
-// Fallback for client-side routing (e.g., /reviews, /join)
-console.log('Registering route: GET * (fallback)');
+// Fallback routes for client-side routing (replacing the wildcard '*')
+const clientRoutes = ['/reviews', '/join', '/about', '/contact']; // Add any other client-side routes here
+clientRoutes.forEach(route => {
+  console.log(`Registering client-side route: GET ${route}`);
+  app.get(route, (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+});
+
+// Default route for unmatched GET requests (instead of '*')
+console.log('Registering default route: GET /not-found');
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+  console.log(`Unmatched route accessed: ${req.path}`);
+  res.status(404).sendFile(path.join(__dirname, '../dist/index.html')); // Or redirect to a 404 page
 });
 
 // Error handling middleware for invalid routes
