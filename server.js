@@ -20,13 +20,12 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 
 // Health check route
 app.get('/health', (req, res) => {
-  console.log('Health check requested');
   res.status(200).json({ status: 'OK' });
 });
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://lic-neemuch-jitendra-patidar.vercel.app', 'https://*.vercel.app'],
+  origin: ['http://localhost:5173', 'https://lic-neemuch-jitendra-patidar.vercel.app'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept'],
   credentials: true,
@@ -34,12 +33,6 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Log all incoming requests
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI_LIC, {
@@ -68,14 +61,24 @@ app.post('/api/lic/submit-feedback', async (req, res) => {
     console.error('Error submitting feedback:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-//});
+});
 
-// Query Endpoints...
+app.get('/api/lic/feedbacks', async (req, res) => {
+  try {
+    const feedbacks = await LICFeedback.find();
+    res.json(feedbacks);
+  } catch (error) {
+    console.error('Error fetching feedbacks:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Query Endpoints
 app.post('/api/lic/submit-query', async (req, res) => {
   try {
     const { name, email, query } = req.body;
     if (!name || !query) {
-      return res.status(400).json({ error: 'Name and query is required' });
+      return res.status(400).json({ error: 'Name and query are required' });
     }
     const newQuery = new LICQuery({ name, email, query });
     await newQuery.save();
@@ -96,8 +99,7 @@ app.get('/api/lic/queries', async (req, res) => {
   }
 });
 
-// Review Endpoints...
-
+// Review Endpoints
 app.post('/api/lic/reviews', async (req, res) => {
   try {
     const { username, comment } = req.body;
@@ -123,7 +125,7 @@ app.get('/api/lic/reviews', async (req, res) => {
   }
 });
 
-// Rating Endpoints...
+// Rating Endpoints
 app.post('/api/lic/ratings', async (req, res) => {
   try {
     const { userId, rating } = req.body;
