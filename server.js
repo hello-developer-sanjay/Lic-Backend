@@ -2,12 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
-const path = require('path');
 const LICFeedback = require('./models/LICFeedback');
 const LICQuery = require('./models/LICQuery');
 const LICReview = require('./models/LICReview');
 const LICRating = require('./models/LICRating');
-const homePageSSR = require('./homePageSSR');
 
 dotenv.config();
 
@@ -25,14 +23,10 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
 
-// Middleware
+// Essential Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve static files (including the client-side React bundle)
-console.log('Registering static route: /dist');
-app.use('/dist', express.static(path.join(__dirname, '../dist')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI_LIC, {
@@ -43,10 +37,6 @@ mongoose.connect(process.env.MONGODB_URI_LIC, {
 }).catch((error) => {
   console.error('MongoDB connection error:', error);
 });
-
-// Use the SSR route for the homepage
-console.log('Registering route: / (homePageSSR)');
-app.use('/', homePageSSR);
 
 // Feedback Endpoints
 console.log('Registering route: POST /api/lic/submit-feedback');
@@ -160,32 +150,6 @@ app.get('/api/lic/ratings', async (req, res) => {
   } catch (error) {
     console.error('Error fetching ratings:', error);
     res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// Fallback routes for client-side routing (replacing the wildcard '*')
-const clientRoutes = ['/reviews', '/join', '/about', '/contact']; // Add any other client-side routes here
-clientRoutes.forEach(route => {
-  console.log(`Registering client-side route: GET ${route}`);
-  app.get(route, (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
-  });
-});
-
-// Default route for unmatched GET requests (instead of '*')
-console.log('Registering default route: GET /not-found');
-app.get('*', (req, res) => {
-  console.log(`Unmatched route accessed: ${req.path}`);
-  res.status(404).sendFile(path.join(__dirname, '../dist/index.html')); // Or redirect to a 404 page
-});
-
-// Error handling middleware for invalid routes
-app.use((err, req, res, next) => {
-  if (err instanceof TypeError && err.message.includes('Missing parameter name')) {
-    console.error(`Invalid route path detected: ${req.path}`);
-    res.status(500).json({ error: 'Invalid route configuration' });
-  } else {
-    next(err);
   }
 });
 
