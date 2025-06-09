@@ -8,10 +8,11 @@ const crypto = require('crypto');
 
 const router = express.Router();
 const cache = new Map();
+
 // Utility to escape HTML
 const escapeHTML = str => {
   if (!str || typeof str !== 'string') return '';
-  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 };
 
 // Fetch ratings and reviews from MongoDB
@@ -48,7 +49,7 @@ const renderStars = (rating) => {
   return stars;
 };
 
-router.get('https://lic-backend-8jun.onrender.com/', async (req, res) => {
+router.get('/', async (req, res) => {
   const cacheKey = 'ssr:home';
   if (cache.has(cacheKey)) {
     const cachedHtml = cache.get(cacheKey);
