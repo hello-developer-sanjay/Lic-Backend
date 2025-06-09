@@ -12,7 +12,7 @@ const cache = new Map();
 // Utility to escape HTML
 const escapeHTML = str => {
   if (!str || typeof str !== 'string') return '';
-  return str.replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, ''');
+  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
 };
 
 // Fetch ratings and reviews from MongoDB
