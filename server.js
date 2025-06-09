@@ -12,20 +12,25 @@ dotenv.config();
 
 const app = express();
 
-// Log environment variables to debug potential issues during startup
+// Log environment variables
 console.log('Environment variables during startup:');
 console.log('PORT:', process.env.PORT);
 console.log('MONGODB_URI_LIC:', process.env.MONGODB_URI_LIC ? '[REDACTED]' : 'Not set');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 
-// Health check route as the very first route to ensure Render can use it
-console.log('Registering route: GET /health');
+// Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK' });
 });
 
-// Essential Middleware
-app.use(cors());
+// Middleware
+app.use(cors({
+  origin: ['http://localhost:5173', 'https://lic-neemuch-jitendra-patidar.vercel.app'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept'],
+  credentials: true,
+  maxAge: 86400,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -40,11 +45,9 @@ mongoose.connect(process.env.MONGODB_URI_LIC, {
 });
 
 // Use the SSR route for the homepage
-console.log('Registering route: / (homePageSSR)');
-app.use(homePageSSR);
+app.use('/', homePageSSR);
 
 // Feedback Endpoints
-console.log('Registering route: POST /api/lic/submit-feedback');
 app.post('/api/lic/submit-feedback', async (req, res) => {
   try {
     const { name, email, feedback } = req.body;
@@ -60,7 +63,6 @@ app.post('/api/lic/submit-feedback', async (req, res) => {
   }
 });
 
-console.log('Registering route: GET /api/lic/feedbacks');
 app.get('/api/lic/feedbacks', async (req, res) => {
   try {
     const feedbacks = await LICFeedback.find();
@@ -72,7 +74,6 @@ app.get('/api/lic/feedbacks', async (req, res) => {
 });
 
 // Query Endpoints
-console.log('Registering route: POST /api/lic/submit-query');
 app.post('/api/lic/submit-query', async (req, res) => {
   try {
     const { name, email, query } = req.body;
@@ -88,7 +89,6 @@ app.post('/api/lic/submit-query', async (req, res) => {
   }
 });
 
-console.log('Registering route: GET /api/lic/queries');
 app.get('/api/lic/queries', async (req, res) => {
   try {
     const queries = await LICQuery.find();
@@ -100,7 +100,6 @@ app.get('/api/lic/queries', async (req, res) => {
 });
 
 // Review Endpoints
-console.log('Registering route: POST /api/lic/reviews');
 app.post('/api/lic/reviews', async (req, res) => {
   try {
     const { username, comment } = req.body;
@@ -116,7 +115,6 @@ app.post('/api/lic/reviews', async (req, res) => {
   }
 });
 
-console.log('Registering route: GET /api/lic/reviews');
 app.get('/api/lic/reviews', async (req, res) => {
   try {
     const reviews = await LICReview.find();
@@ -128,7 +126,6 @@ app.get('/api/lic/reviews', async (req, res) => {
 });
 
 // Rating Endpoints
-console.log('Registering route: POST /api/lic/ratings');
 app.post('/api/lic/ratings', async (req, res) => {
   try {
     const { userId, rating } = req.body;
@@ -147,7 +144,6 @@ app.post('/api/lic/ratings', async (req, res) => {
   }
 });
 
-console.log('Registering route: GET /api/lic/ratings');
 app.get('/api/lic/ratings', async (req, res) => {
   try {
     const ratings = await LICRating.find();
