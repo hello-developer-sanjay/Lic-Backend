@@ -6,6 +6,7 @@ const LICFeedback = require('./models/LICFeedback');
 const LICQuery = require('./models/LICQuery');
 const LICReview = require('./models/LICReview');
 const LICRating = require('./models/LICRating');
+const homePageSSR = require('./homePageSSR'); // Import the new SSR route
 
 dotenv.config();
 
@@ -25,6 +26,9 @@ mongoose.connect(process.env.MONGODB_URI_LIC, {
 }).catch((error) => {
   console.error('MongoDB connection error:', error);
 });
+
+// Use the SSR route for the homepage
+app.use('/', homePageSSR);
 
 // Feedback Endpoints
 app.post('/api/lic/submit-feedback', async (req, res) => {
@@ -132,9 +136,7 @@ app.get('/api/lic/ratings', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-app.get('/', (req, res) => {
-  res.send('Welcome to LIC API');
-});
+
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
