@@ -21,7 +21,7 @@ console.log('NODE_ENV:', process.env.NODE_ENV);
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'https://lic-neemuch-jitendra-patidar.vercel.app', 'https://lic-backend-8jun.onrender.com'],
+  origin: ['https://d3fd3xyi5mztjw.cloudfront.net/', 'https://lic-neemuch-jitendra-patidar.vercel.app', 'https://lic-backend-8jun.onrender.com'],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Accept'],
   credentials: true,
